@@ -1,0 +1,124 @@
+table 'crm_telecom payments'
+	lineageTag: 55e18332-bbd2-43ba-9536-ca55b25dbfc0
+
+	column payment_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 3680525f-bb66-498b-a074-c3a4553fd217
+		summarizeBy: sum
+		sourceColumn: payment_id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_id
+		dataType: string
+		lineageTag: 6e3f66f3-22fc-4f56-8702-336c7b8de4f9
+		summarizeBy: none
+		sourceColumn: customer_id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column reference_month
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 53a31c07-943f-41c3-b999-edca91208f21
+		summarizeBy: none
+		sourceColumn: reference_month
+
+		variation Variation
+			isDefault
+			relationship: 2230f596-f760-4506-bae7-3fe97440e36b
+			defaultHierarchy: LocalDateTable_95cafb03-d4b6-459d-8ce9-0b668eeafd6b.'Hierarquia de datas'
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column due_date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: ddfe6293-41e6-4779-8283-0586eae9271c
+		summarizeBy: none
+		sourceColumn: due_date
+
+		variation Variation
+			isDefault
+			relationship: e27daa87-86ba-4677-b933-1c07a09232b6
+			defaultHierarchy: LocalDateTable_f04d7198-6aed-421a-b1d6-690a10263894.'Hierarquia de datas'
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column payment_date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 21362134-4dcc-466b-93fd-3ba539aadc58
+		summarizeBy: none
+		sourceColumn: payment_date
+
+		variation Variation
+			isDefault
+			relationship: 5e830301-c791-4a58-8101-2937ef5c8b36
+			defaultHierarchy: LocalDateTable_e6e4645d-4f73-43d9-8d86-778d97486a2d.'Hierarquia de datas'
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column days_overdue
+		dataType: int64
+		formatString: 0
+		lineageTag: b4adcc61-8688-49ae-9dfe-a8e45ee3cebf
+		summarizeBy: sum
+		sourceColumn: days_overdue
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column payment_status
+		dataType: string
+		lineageTag: 982a3e75-ca1c-44e5-972a-0a2d67b1eaac
+		summarizeBy: none
+		sourceColumn: payment_status
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column amount
+		dataType: double
+		lineageTag: e0e4c69e-6737-4b51-af0b-0b52f11e8d23
+		summarizeBy: sum
+		sourceColumn: amount
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'crm_telecom payments' = m
+		mode: import
+		source =
+				let
+				    Fonte = MySQL.Database("192.168.68.107", "crm_telecom", [ReturnSingleDatabase=true]),
+				    crm_telecom_payments = Fonte{[Schema="crm_telecom",Item="payments"]}[Data]
+				in
+				    crm_telecom_payments
+
+	annotation PBI_NavigationStepName = Navegação
+
+	annotation PBI_ResultType = Table
+

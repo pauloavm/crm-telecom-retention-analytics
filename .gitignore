@@ -1,0 +1,35 @@
+*.docx
+\.venv
+data/telecom_crm.sqlite
+
+Escopo_telecom.md
+.env
+EDA_DB.ipynb
+*.cs
+surf_telecom_theme.json
+
+
+# ==========================================
+# Power BI .gitignore Oficial
+# ==========================================
+
+# Ignora caches temporários locais do Power BI Desktop
+*.tmp
+*.temp
+*.~*
+SecurityBindings
+
+# Ignora dados locais se você usa PBIP com cache de segurança
+**/localSettings.json
+cache.abf
+
+# Se você quiser ignorar o binário pesado e comitar só o PBIP ou PBIT:
+# *.pbix
+
+# Se você usa Git LFS para arquivos grandes:
+# *.pbix filter=lfs diff=lfs merge=lfs -text
+          
+dashboards/Analise_crm_telecom.pbix
+
+*.pbix
+dashboards/*.pbix

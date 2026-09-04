@@ -1,0 +1,82 @@
+table 'crm_telecom kpi_snapshot_atual'
+	isHidden
+	lineageTag: 4ecca238-a1fa-4d4a-b4ac-cceaae638db4
+
+	column month_start
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 985000e2-76e4-4c32-9c15-f417d6ef943b
+		summarizeBy: none
+		sourceColumn: month_start
+
+		variation Variation
+			isDefault
+			relationship: 4eff208c-5af5-41bb-82be-dd4ec79b5316
+			defaultHierarchy: LocalDateTable_c5a5881d-93f2-4fb5-b322-7b81da0976c1.'Hierarquia de datas'
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column active_customers
+		dataType: int64
+		formatString: 0
+		lineageTag: c9a2e677-9037-4fa8-bdc5-3388bb499227
+		summarizeBy: sum
+		sourceColumn: active_customers
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_revenue
+		dataType: double
+		lineageTag: 239fb86e-0a20-4344-b9bc-a3896a060688
+		summarizeBy: sum
+		sourceColumn: total_revenue
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column arpu_atual
+		dataType: double
+		lineageTag: 337aa603-1491-4e99-922e-ff551d37133e
+		summarizeBy: sum
+		sourceColumn: arpu_atual
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column churn_rate_atual
+		dataType: double
+		lineageTag: 4afec6b5-8a8f-450c-aaff-94518575a258
+		summarizeBy: sum
+		sourceColumn: churn_rate_atual
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'crm_telecom kpi_snapshot_atual' = m
+		mode: import
+		source =
+				let
+				    Fonte = MySQL.Database("192.168.68.107", "crm_telecom", [ReturnSingleDatabase=true]),
+				    crm_telecom_kpi_snapshot_atual = Fonte{[Schema="crm_telecom",Item="kpi_snapshot_atual"]}[Data]
+				in
+				    crm_telecom_kpi_snapshot_atual
+
+	annotation PBI_NavigationStepName = Navegação
+
+	annotation PBI_ResultType = Table
+

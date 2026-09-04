@@ -1,0 +1,79 @@
+table 'crm_telecom cohort_retention'
+	lineageTag: b60412fb-1e7e-4661-a13e-afe4afc1ae89
+
+	column cohort_month
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 5b3f43f3-23df-4d61-a8d8-711e269d0c38
+		summarizeBy: none
+		sourceColumn: cohort_month
+
+		variation Variation
+			isDefault
+			relationship: 36c85e76-445b-4b02-a2ad-de8717503250
+			defaultHierarchy: LocalDateTable_f0af4395-446c-4c37-9081-d5df817d22d1.'Hierarquia de datas'
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column tenure_month
+		dataType: int64
+		formatString: 0
+		lineageTag: 0ddd9684-2445-4b58-8275-be182d25d61f
+		summarizeBy: sum
+		sourceColumn: tenure_month
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column cohort_customers
+		dataType: int64
+		formatString: 0
+		lineageTag: 65da4fd7-8c78-4190-966f-639283c92701
+		summarizeBy: sum
+		sourceColumn: cohort_customers
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column active_customers
+		dataType: int64
+		formatString: 0
+		lineageTag: 60b6462e-1276-446b-a42b-cb5297b55660
+		summarizeBy: sum
+		sourceColumn: active_customers
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column retention_rate
+		dataType: double
+		lineageTag: f75f2406-c448-49ba-a329-aefb799bee54
+		summarizeBy: sum
+		sourceColumn: retention_rate
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'crm_telecom cohort_retention' = m
+		mode: import
+		source =
+				let
+				    Fonte = MySQL.Database("192.168.68.107", "crm_telecom", [ReturnSingleDatabase=true]),
+				    crm_telecom_cohort_retention = Fonte{[Schema="crm_telecom",Item="cohort_retention"]}[Data]
+				in
+				    crm_telecom_cohort_retention
+
+	annotation PBI_NavigationStepName = Navegação
+
+	annotation PBI_ResultType = Table
+

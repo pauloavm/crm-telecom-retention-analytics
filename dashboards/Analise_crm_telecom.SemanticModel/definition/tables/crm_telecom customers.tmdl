@@ -1,0 +1,200 @@
+table 'crm_telecom customers'
+	lineageTag: dbac0b6b-df9a-4c68-bb84-abf249ec3a7c
+
+	column customer_id
+		dataType: string
+		lineageTag: df7eadd9-5df2-41a5-9c79-8f3076402989
+		summarizeBy: none
+		sourceColumn: customer_id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column full_name
+		dataType: string
+		lineageTag: db7661f7-5441-46ea-9638-142fd079b4a5
+		summarizeBy: none
+		sourceColumn: full_name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column email
+		dataType: string
+		lineageTag: 9acb34a5-12db-4ab1-b647-e8388fef643a
+		summarizeBy: none
+		sourceColumn: email
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column phone
+		dataType: string
+		lineageTag: c099730a-ca8c-4bf5-9f30-be903ced143c
+		summarizeBy: none
+		sourceColumn: phone
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column city
+		dataType: string
+		lineageTag: a898d0ac-8a8e-413e-9ccf-0d6c93ebc0c7
+		summarizeBy: none
+		sourceColumn: city
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column state
+		dataType: string
+		lineageTag: 7d058a72-e3f7-47ba-b90b-1a6028d7ccb1
+		summarizeBy: none
+		sourceColumn: state
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column gender
+		dataType: string
+		lineageTag: 69c4ce6d-eea7-48ef-9a15-6a9aad7d0338
+		summarizeBy: none
+		sourceColumn: gender
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column birth_date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: cfb21a6f-4339-4f8e-a75e-8c9950052b0c
+		summarizeBy: none
+		sourceColumn: birth_date
+
+		variation Variation
+			isDefault
+			relationship: a184d5a4-f145-4d54-94c9-dc4f8da0e7c8
+			defaultHierarchy: LocalDateTable_7897d47b-504e-4fa7-ab4b-c2e111090f11.'Hierarquia de datas'
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column acquisition_date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 5b3abf77-0df3-4f89-b6fc-c668468f0eea
+		summarizeBy: none
+		sourceColumn: acquisition_date
+
+		variation Variation
+			isDefault
+			relationship: f36f5aef-a276-4917-895f-49da94c9787d
+			defaultHierarchy: LocalDateTable_bdbc1c3f-0a6b-4580-ad1d-d5bb7105b84a.'Hierarquia de datas'
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column cohort_month
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: a423f1f5-303e-4d36-ac92-715771e63b72
+		summarizeBy: none
+		sourceColumn: cohort_month
+
+		variation Variation
+			isDefault
+			relationship: 0143afdf-b44a-412b-a935-2dcfdda33d22
+			defaultHierarchy: LocalDateTable_1fa1f656-dd94-45e7-9479-960a20d67524.'Hierarquia de datas'
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column plan
+		dataType: string
+		lineageTag: 8558d7c3-46a1-4705-a456-6f62564c001a
+		summarizeBy: none
+		sourceColumn: plan
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column contract_type
+		dataType: string
+		lineageTag: d20387eb-7948-429f-b017-629784e2957b
+		summarizeBy: none
+		sourceColumn: contract_type
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column monthly_fee
+		dataType: double
+		lineageTag: fc637307-32df-4199-881c-5301fc157e9a
+		summarizeBy: sum
+		sourceColumn: monthly_fee
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column current_status
+		dataType: string
+		lineageTag: dba8a97d-d7d6-4112-966b-dbc5dd500f49
+		summarizeBy: none
+		sourceColumn: current_status
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column churn_date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: c1684e9a-7241-4eff-803f-25a330ac57ec
+		summarizeBy: none
+		sourceColumn: churn_date
+
+		variation Variation
+			isDefault
+			relationship: 87f793e1-54a4-49af-befe-b7beff4e07dc
+			defaultHierarchy: LocalDateTable_0ac0a7aa-588e-4917-96c5-ec93633650d3.'Hierarquia de datas'
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition 'crm_telecom customers' = m
+		mode: import
+		source =
+				let
+				    Fonte = MySQL.Database("192.168.68.107", "crm_telecom", [ReturnSingleDatabase=true]),
+				    crm_telecom_customers = Fonte{[Schema="crm_telecom",Item="customers"]}[Data]
+				in
+				    crm_telecom_customers
+
+	annotation PBI_NavigationStepName = Navegação
+
+	annotation PBI_ResultType = Table
+

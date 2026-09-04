@@ -1,0 +1,87 @@
+table 'crm_telecom kpis_mensais'
+	isHidden
+	lineageTag: 8da4d622-cf6a-4a21-8463-41af1f681a21
+
+	column month_start
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: f4c90c05-55ca-41b3-904b-c28c9f4536a9
+		summarizeBy: none
+		sourceColumn: month_start
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column active_customers
+		dataType: int64
+		formatString: 0
+		lineageTag: 062e4207-d446-467a-a1fb-ec876bda409a
+		summarizeBy: sum
+		sourceColumn: active_customers
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column grace_period_customers
+		dataType: int64
+		formatString: 0
+		lineageTag: b45cf240-1ac3-4c9d-9090-a7b7794a859c
+		summarizeBy: sum
+		sourceColumn: grace_period_customers
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column churn_customers
+		dataType: int64
+		formatString: 0
+		lineageTag: 60f37d4d-7d28-425f-ac3c-f7d183962776
+		summarizeBy: sum
+		sourceColumn: churn_customers
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column revenue_at_risk
+		dataType: double
+		lineageTag: 4d705c6c-f4bd-4782-aa6a-b313ab6d0f8c
+		summarizeBy: sum
+		sourceColumn: revenue_at_risk
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column churn_rate
+		dataType: double
+		lineageTag: ea97d94a-e752-4476-9945-fec4a901c89d
+		summarizeBy: sum
+		sourceColumn: churn_rate
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'crm_telecom kpis_mensais' = m
+		mode: import
+		source =
+				let
+				    Fonte = MySQL.Database("192.168.68.107", "crm_telecom", [ReturnSingleDatabase=true]),
+				    crm_telecom_kpis_mensais = Fonte{[Schema="crm_telecom",Item="kpis_mensais"]}[Data]
+				in
+				    crm_telecom_kpis_mensais
+
+	annotation PBI_NavigationStepName = Navegação
+
+	annotation PBI_ResultType = Table
+

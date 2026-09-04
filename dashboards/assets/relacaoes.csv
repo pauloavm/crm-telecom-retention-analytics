@@ -1,0 +1,16 @@
+Tabela_Origem;Coluna_Origem;Tabela_Destino;Coluna_Destino;Direcao_Filtro;Ativo
+"crm_telecom customers";"birth_date";"LocalDateTable_7897d47b-504e-4fa7-ab4b-c2e111090f11";"Date";"OneDirection";True
+"crm_telecom customers";"acquisition_date";"LocalDateTable_bdbc1c3f-0a6b-4580-ad1d-d5bb7105b84a";"Date";"OneDirection";True
+"crm_telecom customers";"cohort_month";"LocalDateTable_1fa1f656-dd94-45e7-9479-960a20d67524";"Date";"OneDirection";True
+"crm_telecom customers";"churn_date";"LocalDateTable_0ac0a7aa-588e-4917-96c5-ec93633650d3";"Date";"OneDirection";True
+"crm_telecom customer_monthly";"customer_id";"crm_telecom customers";"customer_id";"OneDirection";True
+"crm_telecom customer_monthly";"month_start";"dCalendario";"Date";"OneDirection";True
+"crm_telecom payments";"reference_month";"LocalDateTable_95cafb03-d4b6-459d-8ce9-0b668eeafd6b";"Date";"OneDirection";True
+"crm_telecom payments";"due_date";"LocalDateTable_f04d7198-6aed-421a-b1d6-690a10263894";"Date";"OneDirection";True
+"crm_telecom payments";"payment_date";"LocalDateTable_e6e4645d-4f73-43d9-8d86-778d97486a2d";"Date";"OneDirection";True
+"crm_telecom payments";"customer_id";"crm_telecom customers";"customer_id";"OneDirection";True
+"crm_telecom arpu_mensal";"month_start";"dCalendario";"Date";"BothDirections";True
+"crm_telecom cohort_retention";"cohort_month";"LocalDateTable_f0af4395-446c-4c37-9081-d5df817d22d1";"Date";"OneDirection";True
+"crm_telecom kpi_snapshot_atual";"month_start";"LocalDateTable_c5a5881d-93f2-4fb5-b322-7b81da0976c1";"Date";"OneDirection";True
+"crm_telecom kpis_mensais";"month_start";"dCalendario";"Date";"BothDirections";True
+"dCalendario";"Date";"LocalDateTable_61896202-948a-4135-a041-666e016a847c";"Date";"OneDirection";True

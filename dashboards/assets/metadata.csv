@@ -1,0 +1,11 @@
+ID;Name;Table;Description;DataType;Expression;FormatString;IsHidden;State;KPIID;IsSimpleMeasure;DisplayFolder;DetailRowsDefinition;DataCategory;FormatStringDefinition;LineageTag
+6397;"Clientes Ativos";"_Medidas";"";"Integer";"CALCULATE(DISTINCTCOUNT('crm_telecom customer_monthly'[customer_id]), 'crm_telecom customer_monthly'[active_flag] = 1, LASTDATE('dCalendario'[Date]))";"";False;"Valid";;False;"Geral";"";"";"""#,##0""";"577782de-354f-4d0b-9a04-8b1df66c4455"
+6399;"ARPU Atual";"_Medidas";"";"Number";"DIVIDE([Faturamento Total], [Clientes Ativos], 0)";"";False;"Valid";;False;"Geral";"";"";"""R$ #,##0.00""";"a9dc3f6a-9540-4cb7-8f85-fa58fcf94b8c"
+6401;"Taxa Churn Atual";"_Medidas";"";"Number";"VAR _Cancelados = CALCULATE(DISTINCTCOUNT('crm_telecom customer_monthly'[customer_id]), 'crm_telecom customer_monthly'[churn_flag] = 1, LASTDATE('dCalendario'[Date])) RETURN DIVIDE(_Cancelados, [Clientes Ativos], 0)";"";False;"Valid";;False;"Geral";"";"";"""0.00%""";"905c3fc7-ebb4-4a14-a6c9-8d959f7dfc69"
+6404;"Receita sob Risco Atual";"_Medidas";"";"Number";"CALCULATE(SUM('crm_telecom customer_monthly'[revenue_at_risk]), LASTDATE('dCalendario'[Date]))";"";False;"Valid";;False;"Geral";"";"";"""R$ #,##0.00""";"f96c0d89-faae-4ce3-8df1-bb8940c059d2"
+6407;"Taxa Retencao %";"_Medidas";"";"Number";"
+DIVIDE(
+    AVERAGE('crm_telecom cohort_retention'[retention_rate]),
+    100
+)";"";False;"Valid";;False;"";"";"";"";"7da30c0d-5cf2-424b-a736-b14bf501ecf2"
+9771;"Faturamento Total";"_Medidas";"";"Number";"CALCULATE(SUM('crm_telecom customer_monthly'[recognized_revenue]), LASTDATE('dCalendario'[Date]))";"";False;"Valid";;False;"Geral";"";"";"""R$ #,##0.00""";"e413ee75-4847-45d0-a1f3-7286dc9f4aed"

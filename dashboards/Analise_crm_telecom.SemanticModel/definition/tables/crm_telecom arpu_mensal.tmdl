@@ -1,0 +1,65 @@
+table 'crm_telecom arpu_mensal'
+	isHidden
+	lineageTag: 32b0ac07-0c69-4339-81a9-8fd5ce472068
+
+	column month_start
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: f5aa233b-ad44-4172-9edf-90ce082911a7
+		summarizeBy: none
+		sourceColumn: month_start
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column active_customers
+		dataType: int64
+		formatString: 0
+		lineageTag: 66e317b2-db66-43eb-8a2a-96c7cade28af
+		summarizeBy: sum
+		sourceColumn: active_customers
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_revenue
+		dataType: double
+		lineageTag: e00f019c-c959-4abf-8768-de490ffd6028
+		summarizeBy: sum
+		sourceColumn: total_revenue
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column arpu
+		dataType: double
+		lineageTag: 91627ef0-c29a-4b87-ab18-8428d75fc801
+		summarizeBy: sum
+		sourceColumn: arpu
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'crm_telecom arpu_mensal' = m
+		mode: import
+		source =
+				let
+				    Fonte = MySQL.Database("192.168.68.107", "crm_telecom", [ReturnSingleDatabase=true]),
+				    crm_telecom_arpu_mensal = Fonte{[Schema="crm_telecom",Item="arpu_mensal"]}[Data]
+				in
+				    crm_telecom_arpu_mensal
+
+	annotation PBI_NavigationStepName = Navegação
+
+	annotation PBI_ResultType = Table
+

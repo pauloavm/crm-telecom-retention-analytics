@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "Analise_crm_telecom"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "b4a548e2-4f29-4b98-bf87-b655b321e44f"
+  }
+}

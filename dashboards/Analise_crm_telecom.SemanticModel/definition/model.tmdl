@@ -1,0 +1,40 @@
+model Model
+	culture: pt-BR
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: pt-BR
+	valueFilterBehavior: independent
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_QueryOrder = ["crm_telecom customers","crm_telecom customer_monthly","crm_telecom payments","crm_telecom arpu_mensal","crm_telecom cohort_retention","crm_telecom kpi_snapshot_atual","crm_telecom kpis_mensais"]
+
+annotation __TEdtr = 1
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table 'crm_telecom customers'
+ref table DateTableTemplate_4c5603c1-9cb8-46af-80c0-3e4a5bf13c93
+ref table LocalDateTable_7897d47b-504e-4fa7-ab4b-c2e111090f11
+ref table LocalDateTable_bdbc1c3f-0a6b-4580-ad1d-d5bb7105b84a
+ref table LocalDateTable_1fa1f656-dd94-45e7-9479-960a20d67524
+ref table LocalDateTable_0ac0a7aa-588e-4917-96c5-ec93633650d3
+ref table 'crm_telecom customer_monthly'
+ref table 'crm_telecom payments'
+ref table LocalDateTable_95cafb03-d4b6-459d-8ce9-0b668eeafd6b
+ref table LocalDateTable_f04d7198-6aed-421a-b1d6-690a10263894
+ref table LocalDateTable_e6e4645d-4f73-43d9-8d86-778d97486a2d
+ref table 'crm_telecom arpu_mensal'
+ref table 'crm_telecom cohort_retention'
+ref table LocalDateTable_f0af4395-446c-4c37-9081-d5df817d22d1
+ref table 'crm_telecom kpi_snapshot_atual'
+ref table LocalDateTable_c5a5881d-93f2-4fb5-b322-7b81da0976c1
+ref table 'crm_telecom kpis_mensais'
+ref table dCalendario
+ref table LocalDateTable_61896202-948a-4135-a041-666e016a847c
+ref table _Medidas
+
+ref cultureInfo pt-BR
+

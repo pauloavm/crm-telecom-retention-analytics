@@ -1,0 +1,140 @@
+table 'crm_telecom customer_monthly'
+	lineageTag: 7dd088d1-83f8-446f-ac99-71b40e6cab92
+
+	column monthly_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 3191083f-6204-4b16-8366-9019cd53e7e3
+		summarizeBy: sum
+		sourceColumn: monthly_id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_id
+		dataType: string
+		lineageTag: 62342c8b-c8be-46b4-9f35-1d6753374ccb
+		summarizeBy: none
+		sourceColumn: customer_id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_start
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: c8ab50fb-a661-47ff-bea1-ca8af1205ecb
+		summarizeBy: none
+		sourceColumn: month_start
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column tenure_month
+		dataType: int64
+		formatString: 0
+		lineageTag: 1ebf1862-357a-4d31-b2f5-26db43bde469
+		summarizeBy: sum
+		sourceColumn: tenure_month
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column active_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 2677dee8-6ce4-49bc-853d-81618450c887
+		summarizeBy: sum
+		sourceColumn: active_flag
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column churn_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: a000731e-3a14-44dd-9f9b-d7423b84ef8d
+		summarizeBy: sum
+		sourceColumn: churn_flag
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: 617972f2-4104-46d7-b6b4-7a5fd7dbd97c
+		summarizeBy: none
+		sourceColumn: status
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column monthly_fee
+		dataType: double
+		lineageTag: 33ca75b0-9588-4b28-a33e-495c9f318f8a
+		summarizeBy: sum
+		sourceColumn: monthly_fee
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column recognized_revenue
+		dataType: double
+		lineageTag: 32956a0f-7c9e-45a3-ad0d-51f35926e88a
+		summarizeBy: sum
+		sourceColumn: recognized_revenue
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column revenue_at_risk
+		dataType: double
+		lineageTag: dafd5eec-47ae-47e4-8475-eaef82b4d8cd
+		summarizeBy: sum
+		sourceColumn: revenue_at_risk
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column days_overdue
+		dataType: int64
+		formatString: 0
+		lineageTag: f5538dda-a813-4549-9238-4838f225945c
+		summarizeBy: sum
+		sourceColumn: days_overdue
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'crm_telecom customer_monthly' = m
+		mode: import
+		source =
+				let
+				    Fonte = MySQL.Database("192.168.68.107", "crm_telecom", [ReturnSingleDatabase=true]),
+				    crm_telecom_customer_monthly = Fonte{[Schema="crm_telecom",Item="customer_monthly"]}[Data]
+				in
+				    crm_telecom_customer_monthly
+
+	annotation PBI_NavigationStepName = Navegação
+
+	annotation PBI_ResultType = Table
+

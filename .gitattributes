@@ -1,0 +1,2 @@
+# *.pbix filter=lfs diff=lfs merge=lfs -text
+# Analise_crm_telecom.pbix

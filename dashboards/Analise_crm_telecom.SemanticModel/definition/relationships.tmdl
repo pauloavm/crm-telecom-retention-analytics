@@ -1,0 +1,76 @@
+relationship a184d5a4-f145-4d54-94c9-dc4f8da0e7c8
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'crm_telecom customers'.birth_date
+	toColumn: LocalDateTable_7897d47b-504e-4fa7-ab4b-c2e111090f11.Date
+
+relationship f36f5aef-a276-4917-895f-49da94c9787d
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'crm_telecom customers'.acquisition_date
+	toColumn: LocalDateTable_bdbc1c3f-0a6b-4580-ad1d-d5bb7105b84a.Date
+
+relationship 0143afdf-b44a-412b-a935-2dcfdda33d22
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'crm_telecom customers'.cohort_month
+	toColumn: LocalDateTable_1fa1f656-dd94-45e7-9479-960a20d67524.Date
+
+relationship 87f793e1-54a4-49af-befe-b7beff4e07dc
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'crm_telecom customers'.churn_date
+	toColumn: LocalDateTable_0ac0a7aa-588e-4917-96c5-ec93633650d3.Date
+
+relationship 2230f596-f760-4506-bae7-3fe97440e36b
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'crm_telecom payments'.reference_month
+	toColumn: LocalDateTable_95cafb03-d4b6-459d-8ce9-0b668eeafd6b.Date
+
+relationship e27daa87-86ba-4677-b933-1c07a09232b6
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'crm_telecom payments'.due_date
+	toColumn: LocalDateTable_f04d7198-6aed-421a-b1d6-690a10263894.Date
+
+relationship 5e830301-c791-4a58-8101-2937ef5c8b36
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'crm_telecom payments'.payment_date
+	toColumn: LocalDateTable_e6e4645d-4f73-43d9-8d86-778d97486a2d.Date
+
+relationship 36c85e76-445b-4b02-a2ad-de8717503250
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'crm_telecom cohort_retention'.cohort_month
+	toColumn: LocalDateTable_f0af4395-446c-4c37-9081-d5df817d22d1.Date
+
+relationship 4eff208c-5af5-41bb-82be-dd4ec79b5316
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'crm_telecom kpi_snapshot_atual'.month_start
+	toColumn: LocalDateTable_c5a5881d-93f2-4fb5-b322-7b81da0976c1.Date
+
+relationship bafeec4e-c967-450d-9db7-ef406f679863
+	fromColumn: 'crm_telecom customer_monthly'.customer_id
+	toColumn: 'crm_telecom customers'.customer_id
+
+	annotation PBI_IsFromSource = FS
+
+relationship ce88d206-32e9-44b2-a74d-a825c6ab03d3
+	fromColumn: 'crm_telecom payments'.customer_id
+	toColumn: 'crm_telecom customers'.customer_id
+
+	annotation PBI_IsFromSource = FS
+
+relationship 02247af9-b322-4b08-87ae-0b907af3789a
+	joinOnDateBehavior: datePartOnly
+	fromColumn: dCalendario.Date
+	toColumn: LocalDateTable_61896202-948a-4135-a041-666e016a847c.Date
+
+relationship 8a676c53-9131-adcb-afaa-6ceb8c2ff19b
+	crossFilteringBehavior: bothDirections
+	fromColumn: 'crm_telecom kpis_mensais'.month_start
+	toColumn: dCalendario.Date
+
+relationship cca9d801-d14b-a845-f3ee-ba90dbcbd6ae
+	crossFilteringBehavior: bothDirections
+	fromColumn: 'crm_telecom arpu_mensal'.month_start
+	toColumn: dCalendario.Date
+
+relationship db56702c-0bd9-4d30-0bdd-48859e5cc61a
+	fromColumn: 'crm_telecom customer_monthly'.month_start
+	toColumn: dCalendario.Date
+
