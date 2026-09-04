@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 st.set_page_config(
-    page_title="Surf Telecom — CRM & Retention Analytics",
+    page_title="SP Telecom — CRM & Retention Analytics",
     page_icon="📶",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -239,10 +239,10 @@ with st.sidebar:
     st.markdown(f"""
         <div style="text-align: center; padding: 10px 0 20px 0;">
             <div style="font-size: 1.8rem; font-weight: 900; letter-spacing: -1px; color: {SURF_THEME['cobalt_blue']};">
-                SURF <span style="color: {SURF_THEME['obsidian_black']};">TELECOM</span>
+                SP <span style="color: {SURF_THEME['obsidian_black']};">TELECOM</span>
             </div>
-            <div style="font-size: 0.72rem; color: {SURF_THEME['slate_gray']}; font-weight: 500;">
-                BOSSS PLATFORM — INTELLIGENCE
+            <div style="font-size: 0.72rem; color: {SURF_THEME['slate_gray']}; font-weight: 500; letter-spacing: 0.05em;">
+                PLATAFORMA DE INTELIGÊNCIA & CRM
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -267,9 +267,9 @@ with st.sidebar:
         
     st.markdown(f"""
         <div style="margin-top: 25px; padding: 12px; background: {SURF_THEME['pure_white']}; border-radius: 8px; border: 1px solid {SURF_THEME['card_border']};">
-            <div style="font-size: 0.75rem; font-weight: 700; color: {SURF_THEME['cobalt_blue']};">BRAND IDENTITY VERIFIED</div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: {SURF_THEME['cobalt_blue']};">IDENTIDADE VISUAL APLICADA</div>
             <div style="font-size: 0.7rem; color: {SURF_THEME['slate_gray']}; margin-top: 4px;">
-                Palette: Cobalt Blue (#0012FF), Obsidian Black (#111111), Chalk White (#F3F3F3).
+                Paleta: Cobalt Blue (#0012FF), Obsidian Black (#111111), Chalk White (#F3F3F3).
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -335,7 +335,7 @@ df_monthly, df_cohort_raw = query_dashboard_data(where_sql, params)
 st.markdown(f"""
     <div class="main-header">
         <div>
-            <div class="brand-badge">Operadora Móvel 100% Nacional</div>
+            <div class="brand-badge">SP Telecom — Inteligência em Conectividade</div>
             <h1 style="margin: 8px 0 4px 0; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px;">
                 Telecom CRM & Retention Dashboard
             </h1>
@@ -574,6 +574,20 @@ with st.expander("🔍 Visualizar e Exportar Dados Consolidados (CSV)"):
     st.download_button(
         label="📥 Baixar Dados Consolidados (.csv)",
         data=csv_data,
-        file_name="surf_telecom_consolidado_crm.csv",
+        file_name="sp_telecom_consolidado_crm.csv",
         mime="text/csv"
     )
+
+st.markdown(f"""
+    <div style="text-align: center; margin-top: 50px; padding: 22px 16px; color: {SURF_THEME['slate_gray']}; font-size: 0.78rem; border-top: 1px solid {SURF_THEME['card_border']}; background-color: {SURF_THEME['pure_white']}; border-radius: 10px;">
+        <p style="margin: 0; font-weight: 600; color: {SURF_THEME['obsidian_black']};">
+            ⚠️ Nota de Isenção e Conformidade
+        </p>
+        <p style="margin: 6px 0 0 0;">
+            Todos os dados, nomes, métricas financeiras e indicadores apresentados neste dashboard são <strong>estritamente fictícios</strong>, gerados por modelo sintético para fins demonstrativos, de portfólio e análise de retenção.
+        </p>
+        <p style="margin: 4px 0 0 0; font-size: 0.72rem; color: #94A3B8;">
+            © SP Telecom — Dashboard Analítico de CRM e Retenção
+        </p>
+    </div>
+""", unsafe_allow_html=True)
