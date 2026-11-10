@@ -56,12 +56,14 @@ Os dois painéis seguem a mesma especificação de KPIs ([`specs/kpis.spec.md`](
 
 ---
 
-## 💼 Estudo de Caso de Negócio (Metodologia STAR)
+## 💼 Estudo de Caso Simulado (Metodologia STAR)
 
-Esta seção documenta o impacto estratégico e o desenvolvimento técnico do projeto de acordo com a metodologia **STAR** (*Situation, Task, Action, Result*).
+Esta seção documenta o desenvolvimento técnico e os achados do projeto no formato **STAR** (*Situation, Task, Action, Result*).
+
+> ⚠️ **O cenário é hipotético.** A operadora, a base de clientes e os valores são fictícios (dados sintéticos). Os "resultados" abaixo são achados da base simulada, não de uma operação real.
 
 ### 1. Situação (Situation)
-Uma grande operadora de telecomunicações estava enfrentando uma **taxa de churn (cancelamento) historicamente elevada**, impactando a previsibilidade da receita mensal e comprometendo a margem líquida da operação. O time de CRM e Marketing de Retenção operava de forma reativa devido à falta de indicadores preditivos e visibilidade em tempo real sobre a saúde da base ativa, a receita média gerada por usuário (ARPU) e o comportamento financeiro detalhado de clientes recém-adquiridos.
+Cenário hipotético: uma grande operadora de telecomunicações enfrenta uma **taxa de churn (cancelamento) historicamente elevada**, impactando a previsibilidade da receita mensal e comprometendo a margem líquida da operação. O time de CRM e Marketing de Retenção operava de forma reativa devido à falta de indicadores preditivos e visibilidade em tempo real sobre a saúde da base ativa, a receita média gerada por usuário (ARPU) e o comportamento financeiro detalhado de clientes recém-adquiridos.
 
 ### 2. Tarefa (Task)
 Minha missão foi desenvolver um **pipeline analítico de ponta a ponta** capaz de coletar, processar, modelar e expor de maneira executiva e web os dados históricos de clientes. Os principais objetivos foram:
@@ -86,12 +88,12 @@ Para concretizar as metas propostas, conduzi as seguintes ações integradas:
     *   **Streamlit (Python)**: Desenvolvi o arquivo `app.py` integrando com o banco SQLite. Com o auxílio do **Plotly**, criei gráficos totalmente dinâmicos, incluindo um heatmap interativo para a matriz de Cohort e visualizações que reagem instantaneamente aos filtros de planos e estados selecionados pelos usuários.
     *   **Publicação na Nuvem**: Hospedei o painel interativo utilizando o **Streamlit Community Cloud**, facilitando a demonstração prática do projeto em tempo real a qualquer parte interessada.
 
-### 4. Resultado (Result)
-Os resultados entregues pelo projeto trouxeram revelações críticas de negócios e soluções mensuráveis:
-*   **Identificação de Gargalos Críticos (Cohort)**: O painel de safras (disponível no Streamlit e no Excel) evidenciou que **~27% de todo o churn ocorre no 3º mês de tenure (assinatura)** — mais que o dobro de qualquer outro mês. Isso indicou uma falha grave de *onboarding* de clientes ou na entrega inicial do serviço.
+### 4. Resultado (Result): achados na base simulada
+Principais achados do projeto sobre a base sintética (não são resultados de uma operação real):
+*   **Identificação de Gargalos Críticos (Cohort)**: O painel de safras (disponível no Streamlit e no Excel) evidenciou que **~27% de todo o churn ocorre no 3º mês de tenure (assinatura)** — mais que o dobro de qualquer outro mês. Num caso real, isso apontaria para uma possível falha de *onboarding* ou na entrega inicial do serviço.
 *   **Quantificação de Riscos Financeiros**: A regra de Grace Period isolou a receita de clientes inadimplentes recuperáveis: **~15% da base fica em Grace Period a cada mês**, o equivalente a **~R$ 4 mil/mês na amostra de 1.000 clientes** (≈ R$ 4 milhões/mês na simulação de 1 milhão de clientes).
-*   **Direcionamento de CRM**: O diagnóstico de Cohort e Grace Period permitiu que o time de CRM criasse campanhas de retenção direcionadas (ações de *cross-selling* preventivo no final do 2º mês de assinatura) e réguas de cobrança automatizadas para o grupo de inadimplência inicial.
-*   **Projeções de Negócio**: Estima-se que as ações focadas reduzam a **taxa de churn geral em até 15%** e recuperem **20% de toda a receita em risco** (`revenue_at_risk`), impactando diretamente o ROI e o fluxo de caixa.
+*   **Ações de CRM sugeridas**: O diagnóstico de Cohort e Grace Period indica onde o CRM poderia atuar: campanhas de retenção direcionadas (ações de *cross-selling* preventivo no final do 2º mês de assinatura) e réguas de cobrança automatizadas para o grupo de inadimplência inicial.
+*   **Hipóteses de impacto (não medidas)**: a premissa é que ações focadas possam reduzir a **taxa de churn geral em até 15%** e recuperar **20% de toda a receita em risco** (`revenue_at_risk`). São estimativas de planejamento, não resultados observados.
 *   **Consistência entre Painéis**: Streamlit, Excel e tabelas SQL são conferidos entre si por testes automatizados — o mesmo filtro produz os mesmos números em qualquer interface.
 
 ---
