@@ -1,6 +1,12 @@
 # CRM & Telecom Churn Analytics Pipeline
 > **Projeto de Retenção de Clientes e CRM Analytics para Telecomunicações**
 
+[![CI](https://github.com/pauloavm/crm-telecom-retention-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/pauloavm/crm-telecom-retention-analytics/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/python-3.13-blue)
+![Testes](https://img.shields.io/badge/testes-41%20(unit%20%2B%20SQL%20%2B%20E2E)-brightgreen)
+
+> ⚠️ **Dados 100% sintéticos** (gerados com `Faker` em `generate_database.py`). Empresa, clientes e valores são fictícios — o objetivo é demonstrar modelagem, engenharia e análise de retenção.
+
 ---
 
 Este repositório contém um ecossistema de análise de dados de ponta a ponta projetado para mensurar a saúde da base de clientes ativos, quantificar riscos financeiros associados à inadimplência temporária e modelar a retenção de safras (análise de coorte).
@@ -19,23 +25,29 @@ Ao invés de delegar cálculos pesados e complexos em tempo de execução via me
 
 ```bash
 /
-├── .gitattributes
-├── .gitignore
-├── README.md               # Documentação principal estruturada em metodologia STAR
-├── requirements.txt        # Dependências do Python (Streamlit, Pandas, Plotly, etc.)
-├── dicionario_dados.md     # Mapeamento do esquema lógico e dicionário de dados detalhado
-├── generate_database.py    # Script para simular e gerar a estrutura local do banco de dados SQLite
-├── ingestao_dados.py       # Pipeline de carga, tratamento e higienização dos dados de churn
-├── generate_table_view.py  # Script auxiliar de visualização de dados de tabelas fato
-├── app.py                  # Dashboard web e interativo desenvolvido em Streamlit
-├── /data/                  # Diretório local para armazenamento dos dados brutos (Telco Churn)
-├── /sql/                   # Scripts SQL para cálculo de métricas agregadas
-│   ├── calc_arpu.sql       # Query de cálculo de ARPU (Average Revenue Per User) mensal
-│   └── cohort_analysis.sql # Query analítica para mapear a retenção histórica de safras
-├── /notebooks/             # Análises exploratórias avançadas
-│   └── analise_inadimplencia.ipynb # Análise e isolamento da regra de negócio Grace Period
-└── /dashboards/            # Arquivo de visualização executiva e capturas de tela
-    └── dashboard_retencao.pbix # Dashboard otimizado no Power BI
+├── README.MD
+├── requirements.txt         # Dependências do app (Streamlit Cloud)
+├── requirements-dev.txt     # Dependências de teste/qualidade (pytest, Playwright, ruff)
+├── pytest.ini
+├── dicionario_dados.md      # Dicionário de dados detalhado
+├── specs/
+│   └── kpis.spec.md         # Especificação (SDD) das regras de negócio e KPIs — fonte da verdade
+├── generate_database.py     # Gera a base sintética (Faker) em SQLite com a regra de Grace Period
+├── ingestao_dados.py        # Migra o SQLite para MySQL (schema relacional + carga)
+├── generate_table_view.py   # Executa os modelos de /sql no MySQL e materializa as tabelas resumo
+├── analytics.py             # Camada de métricas do dashboard (pura e testável)
+├── app.py                   # Dashboard web em Streamlit + Plotly
+├── /data/                   # SQLite de demonstração (1.000 clientes, 24 meses)
+├── /sql/                    # Modelos SQL de agregação
+│   ├── calc_arpu.sql            # ARPU mensal
+│   ├── cohort_analysis.sql      # Matriz de retenção por safra
+│   ├── kpis_mensais.sql         # Série mensal: ativos, grace, churn, receita sob risco
+│   └── kpi_snapshot_atual.sql   # Snapshot do último mês para cartões KPI
+├── /tests/                  # 41 testes: spec de KPIs, qualidade de dados, SQL, gerador, app e E2E
+│   └── /e2e/                    # Playwright: sobe o Streamlit e testa a interface real
+├── /.github/workflows/ci.yml # CI: lint + testes + E2E a cada push
+└── /dashboards/             # Projeto Power BI em formato PBIP (versionável em Git)
+    └── Analise_crm_telecom.pbip
 ```
 
 ---
@@ -56,12 +68,12 @@ Minha missão foi desenvolver um **pipeline analítico de ponta a ponta** capaz 
 ### 3. Ação (Action)
 Para concretizar as metas propostas, conduzi as seguintes ações integradas:
 
-*   **Ingestão & Engenharia de Dados**: Utilizando Python (`ingestao_dados.py` e `generate_database.py`), carreguei e tratei o conjunto de dados bruto. Criei um modelo relacional robusto no SQLite estruturado em um esquema estrela (*Star Schema*).
+*   **Ingestão & Engenharia de Dados**: Com `generate_database.py` simulei a base de clientes (Faker, semente fixa → reprodutível) em SQLite; com `ingestao_dados.py` migrei o modelo relacional para MySQL e com `generate_table_view.py` materializei as tabelas resumo a partir dos modelos em `/sql`.
 *   **Transformações e Pré-Agregações em SQL**: Em vez de aplicar lógicas de tabelas temporárias e filtros pesados via DAX no Power BI ou loops complexos no Streamlit, desenvolvi rotinas em SQL para pré-calcular métricas-chave em tabelas físicas agregadas:
     *   **Matriz de Cohort (Safras)**: Criação da tabela `cohort_retention`, que agrupa os clientes por mês de aquisição (`cohort_month`) e calcula a taxa de retenção (`retention_rate`) no decorrer dos meses de vida do cliente (`tenure_month`).
     *   **ARPU e Receita Mensal**: Criação da tabela `arpu_mensal` consolidando o volume de clientes ativos, faturamento total reconhecido e ARPU mês a mês.
     *   **Snapshot Executivo**: Tabela `kpi_snapshot_atual` calculando de forma estática os últimos indicadores chave do negócio (`active_customers`, `total_revenue`, `arpu_atual`, `churn_rate_atual`) para alimentar os cartões instantaneamente.
-*   **Implementação de Regras de Negócio (Python)**: No notebook `/notebooks/analise_inadimplencia.ipynb`, isolei o comportamento de atraso de pagamento de faturas. Desenvolvi a regra de **Grace Period (Período de Graça)**:
+*   **Implementação de Regras de Negócio (Python)**: Em `generate_database.py`, isolei o comportamento de atraso de pagamento de faturas (regras formalizadas em `specs/kpis.spec.md`). Desenvolvi a regra de **Grace Period (Período de Graça)**:
     *   Clientes com faturas em atraso de **até 15 dias** são catalogados no status `GRACE_PERIOD` (inadimplência temporária e recuperável).
     *   O faturamento desses clientes é isolado na métrica **Receita sob Risco** (`revenue_at_risk`), orientando diretamente o CRM a disparar réguas de cobrança amigáveis preventivas.
     *   Atrasos acima de 15 dias são classificados como Churn definitivo.
@@ -72,8 +84,8 @@ Para concretizar as metas propostas, conduzi as seguintes ações integradas:
 
 ### 4. Resultado (Result)
 Os resultados entregues pelo projeto trouxeram revelações críticas de negócios e soluções mensuráveis:
-*   **Identificação de Gargalos Críticos (Cohort)**: O painel de safras (disponível no Power BI e no Streamlit) evidenciou que **40% de todo o churn ocorre precisamente no 3º mês de tenure (assinatura)**. Isso indicou uma falha grave de *onboarding* de clientes ou na entrega inicial do serviço.
-*   **Quantificação de Riscos Financeiros**: A regra de Grace Period demonstrou que a operadora possuía, em média, **R$ 250 mil em receita sob risco mensal** associada a clientes inadimplentes recuperáveis.
+*   **Identificação de Gargalos Críticos (Cohort)**: O painel de safras (disponível no Power BI e no Streamlit) evidenciou que **~27% de todo o churn ocorre no 3º mês de tenure (assinatura)** — mais que o dobro de qualquer outro mês. Isso indicou uma falha grave de *onboarding* de clientes ou na entrega inicial do serviço.
+*   **Quantificação de Riscos Financeiros**: A regra de Grace Period isolou a receita de clientes inadimplentes recuperáveis: **~15% da base fica em Grace Period a cada mês**, o equivalente a **~R$ 4 mil/mês na amostra de 1.000 clientes** (≈ R$ 4 milhões/mês na simulação de 1 milhão de clientes).
 *   **Direcionamento de CRM**: O diagnóstico de Cohort e Grace Period permitiu que o time de CRM criasse campanhas de retenção direcionadas (ações de *cross-selling* preventivo no final do 2º mês de assinatura) e réguas de cobrança automatizadas para o grupo de inadimplência inicial.
 *   **Projeções de Negócio**: Estima-se que as ações focadas reduzam a **taxa de churn geral em até 15%** e recuperem **20% de toda a receita em risco** (`revenue_at_risk`), impactando diretamente o ROI e o fluxo de caixa.
 *   **Performance dos Painéis**: Ao desonerar o mecanismo de análise do Power BI e as consultas do Streamlit de cálculos de Cohort dinâmicos, ambos os painéis obtiveram um **tempo de resposta sub-segundo** sob qualquer filtro ou interação.
@@ -128,14 +140,19 @@ A fim de garantir a performance máxima das consultas nos dashboards, quatro tab
 
 2.  **Inicialização do Banco de Dados**:
     Execute o script de inicialização para gerar e popular as tabelas relacionais locais (`customers`, `customer_monthly`, `payments`) de testes a partir do arquivo bruto de telecom:
-    ```bash\n    python generate_database.py\n    ```
+    ```bash
+    python generate_database.py
+    ```
 
-3.  **Execução do Pipeline de Transformação e Carga (ETL)**:
-    Processe os dados e monte as tabelas otimizadas e pré-calculadas executando o script de ETL:
+3.  **(Opcional) Carga no MySQL e tabelas resumo**:
+    Configure `DB_USUARIO`, `DB_SENHA`, `DB_HOST`, `DB_PORTA`, `DB_DIALETO` e `DB_DESTINO` em um `.env` e execute:
     ```bash
     python ingestao_dados.py
     ```
-    Este script aplica a lógica de *Grace Period*, realiza as agregações de *Cohort* e *ARPU* e salva as visões prontas no banco SQLite.
+    ```bash
+    python generate_table_view.py
+    ```
+    O primeiro migra o SQLite para MySQL; o segundo executa os modelos de `/sql` (Cohort, ARPU, KPIs mensais e snapshot) consumidos pelo Power BI. O dashboard Streamlit não precisa desta etapa: ele calcula as métricas direto do SQLite.
 
 4.  **Executando o Dashboard Web Localmente**:
     Com os dados processados, inicie a interface interativa do Streamlit para visualizá-la no navegador:
@@ -144,7 +161,16 @@ A fim de garantir a performance máxima das consultas nos dashboards, quatro tab
     ```
 
 5.  **Acessando pelo Power BI**:
-    Caso prefira utilizar o Power BI Desktop, abra o arquivo `dashboard_retencao.pbix` localizado em `/dashboards/`, aponte a conexão para o banco SQLite gerado localmente e explore o painel executivo otimizado.
+    Abra `dashboards/Analise_crm_telecom.pbip` no Power BI Desktop (formato PBIP, versionável em Git), aponte a conexão para o MySQL gerado no passo 3 e explore o painel executivo.
+
+6.  **Rodando os testes**:
+    ```bash
+    pip install -r requirements-dev.txt
+    ```
+    ```bash
+    python -m pytest
+    ```
+    Os testes E2E usam Playwright; na primeira vez rode `python -m playwright install chromium`.
 
 ---
 
@@ -160,6 +186,28 @@ A fim de garantir a performance máxima das consultas nos dashboards, quatro tab
 *   **Cabeçalho Estratégico**: Cartões KPI estáticos consumidos diretamente da tabela `kpi_snapshot_atual`.
 *   **Análise de Safras**: Matriz estruturada com `cohort_month` em linhas, `tenure_month` em colunas e `retention_rate` em valores, aplicando uma escala de cores térmicas para destacar o abandono no terceiro mês.
 *   **Evolução de Faturamento**: Gráfico de linhas duplo combinando `total_revenue` e `arpu` ao longo da linha temporal de `month_start`.
+
+---
+
+## ✅ Qualidade, Testes e Spec-Driven Development
+
+As fórmulas de cada KPI estão especificadas em [`specs/kpis.spec.md`](specs/kpis.spec.md) com IDs (`RN-xx`, `KPI-xx`, `UI-xx`) e **cada regra tem um teste automatizado** que a verifica. A CI roda tudo a cada push.
+
+| Camada | Arquivo | O que garante |
+|---|---|---|
+| Spec de KPIs | `tests/test_analytics_spec.py` | Fórmulas de ARPU, churn, receita sob risco e retenção sobre uma base mínima com resultado calculável à mão |
+| Qualidade de dados | `tests/test_data_quality.py` | Chaves, integridade referencial, churn terminal, histórico contíguo, status × dias de atraso |
+| Modelos SQL | `tests/test_sql_models.py` | Executa `/sql` e valida limites, idempotência e consistência entre tabelas |
+| Gerador | `tests/test_generator.py` | Regras de negócio da simulação e pico de churn no 3º mês |
+| App | `tests/test_app.py` | Streamlit renderiza e reage a filtros sem exceção (AppTest) |
+| E2E | `tests/e2e/` | Navegador real: cartões, gráficos, filtros, exportação CSV e layout mobile |
+
+Ao escrever a spec, os testes revelaram e motivaram a correção de 5 inconsistências no cálculo original:
+1. **Receita sob risco** somava clientes já cancelados (receita perdida, não "em risco") — inflava o KPI entre 46% (último mês) e 67% (média mensal).
+2. O cartão de risco **zerava** ao escolher uma janela que não terminasse no último mês do banco.
+3. O gráfico de composição **contava clientes em Grace Period duas vezes**.
+4. A matriz de cohort **apagava safras anteriores à janela** selecionada e usava o M0 ativo como base (em vez do tamanho da safra).
+5. O churn rate era dividido pelos ativos remanescentes, e não pela base do início do mês.
 
 ---
 

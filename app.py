@@ -1,17 +1,17 @@
-import os
 import sqlite3
 import numpy as np
 import pandas as pd
 import streamlit as st
-import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+
+from analytics import Filters, cohort_retention, find_database, headline, monthly_kpis
 
 st.set_page_config(
     page_title="SP Telecom — CRM & Retention Analytics",
     page_icon="📶",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="auto"
 )
 
 SURF_THEME = {
@@ -119,20 +119,8 @@ st.markdown(f"""
 
 @st.cache_resource
 def get_database_connection():
-    """Detects database file in current path or parent directory, or creates synthetic fallback."""
-    possible_paths = [
-        "telecom_crm_.sqlite",
-        "telecom_crm.sqlite",
-        "data/telecom_crm_.sqlite",
-        "data/telecom_crm.sqlite",
-        "../telecom_crm_.sqlite"
-    ]
-    db_file = None
-    for p in possible_paths:
-        if os.path.exists(p):
-            db_file = p
-            break
-            
+    """Localiza o SQLite relativo ao repositório (independe do cwd) ou gera um fallback sintético."""
+    db_file = find_database()
     if db_file:
         conn = sqlite3.connect(db_file, check_same_thread=False)
         return conn, False
@@ -192,7 +180,6 @@ def _generate_sample_sqlite_database(conn):
         cohort_idx = np.random.randint(0, len(dates) - 1)
         cohort_m = dates[cohort_idx]
         
-        is_active = True
         churn_tenure = 999
         if np.random.rand() < 0.28:
             churn_tenure = np.random.choice([1, 2, 3, 4, 6, 8], p=[0.10, 0.25, 0.35, 0.15, 0.10, 0.05])
@@ -274,63 +261,22 @@ with st.sidebar:
         </div>
     """, unsafe_allow_html=True)
 
-where_clauses = ["1=1"]
-params = []
+filters = Filters(
+    plans=tuple(selected_plans),
+    contracts=tuple(selected_contracts),
+    states=tuple(selected_states),
+    month_start=month_range[0],
+    month_end=month_range[1],
+)
 
-if selected_plans:
-    where_clauses.append(f"c.plan IN ({','.join(['?']*len(selected_plans))})")
-    params.extend(selected_plans)
-if selected_contracts:
-    where_clauses.append(f"c.contract_type IN ({','.join(['?']*len(selected_contracts))})")
-    params.extend(selected_contracts)
-if selected_states:
-    where_clauses.append(f"c.state IN ({','.join(['?']*len(selected_states))})")
-    params.extend(selected_states)
-if month_range[0] and month_range[1]:
-    where_clauses.append("cm.month_start BETWEEN ? AND ?")
-    params.extend([month_range[0], month_range[1]])
-
-where_sql = " AND ".join(where_clauses)
 
 @st.cache_data(ttl=300)
-def query_dashboard_data(where_stmt, query_params):
-    sql_monthly = f"""
-        SELECT 
-            cm.month_start,
-            COUNT(DISTINCT CASE WHEN cm.active_flag = 1 THEN cm.customer_id END) AS active_customers,
-            COUNT(DISTINCT CASE WHEN cm.revenue_at_risk > 0 AND cm.active_flag = 1 THEN cm.customer_id END) AS grace_customers,
-            COUNT(DISTINCT CASE WHEN cm.churn_flag = 1 THEN cm.customer_id END) AS churn_customers,
-            COALESCE(SUM(cm.recognized_revenue), 0.0) AS total_revenue,
-            COALESCE(SUM(CASE WHEN cm.month_start = (SELECT MAX(month_start) FROM customer_monthly) THEN cm.revenue_at_risk ELSE 0 END), 0.0) AS revenue_at_risk
-        FROM customer_monthly cm
-        JOIN customers c ON c.customer_id = cm.customer_id
-        WHERE {where_stmt}
-        GROUP BY cm.month_start
-        ORDER BY cm.month_start ASC;
-    """
-    df_monthly = pd.read_sql_query(sql_monthly, conn, params=query_params)
-    
-    # Calculate ARPU and Churn % dynamically
-    df_monthly['arpu'] = np.where(df_monthly['active_customers'] > 0, df_monthly['total_revenue'] / df_monthly['active_customers'], 0.0)
-    df_monthly['churn_rate'] = np.where(df_monthly['active_customers'] > 0, (df_monthly['churn_customers'] / df_monthly['active_customers']) * 100, 0.0)
-    
-    # Cohort query
-    sql_cohort = f"""
-        SELECT 
-            c.cohort_month,
-            cm.tenure_month,
-            COUNT(DISTINCT CASE WHEN cm.active_flag = 1 THEN cm.customer_id END) AS active_in_tenure
-        FROM customer_monthly cm
-        JOIN customers c ON c.customer_id = cm.customer_id
-        WHERE {where_stmt}
-        GROUP BY c.cohort_month, cm.tenure_month
-        ORDER BY c.cohort_month ASC, cm.tenure_month ASC;
-    """
-    df_cohort = pd.read_sql_query(sql_cohort, conn, params=query_params)
-    
-    return df_monthly, df_cohort
+def query_dashboard_data(f: Filters):
+    """KPIs mensais e matriz de cohort — fórmulas em analytics.py / specs/kpis.spec.md."""
+    return monthly_kpis(conn, f), cohort_retention(conn, f)
 
-df_monthly, df_cohort_raw = query_dashboard_data(where_sql, params)
+
+df_monthly, cohort_matrix = query_dashboard_data(filters)
 
 st.markdown(f"""
     <div class="main-header">
@@ -352,19 +298,10 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-if not df_monthly.empty:
-    last_row = df_monthly.iloc[-1]
-    prev_row = df_monthly.iloc[-2] if len(df_monthly) > 1 else last_row
-    
-    cur_active = int(last_row['active_customers'])
-    prev_active = int(prev_row['active_customers'])
-    active_diff_pct = ((cur_active - prev_active) / prev_active * 100) if prev_active > 0 else 0.0
-    
-    cur_arpu = float(last_row['arpu'])
-    cur_churn = float(last_row['churn_rate'])
-    cur_risk = float(last_row['revenue_at_risk'])
-else:
-    cur_active, active_diff_pct, cur_arpu, cur_churn, cur_risk = 0, 0.0, 0.0, 0.0, 0.0
+kpis = headline(df_monthly)
+cur_active, active_diff_pct = kpis["active"], kpis["active_delta_pct"]
+cur_arpu, cur_churn, cur_risk = kpis["arpu"], kpis["churn_rate"], kpis["revenue_at_risk"]
+ref_month = kpis["month"] or "—"
 
 kpi1, kpi2, kpi3, kpi4 = st.columns(4)
 
@@ -384,7 +321,7 @@ with kpi2:
         <div class="metric-card">
             <div class="metric-title">ARPU Médio Atual</div>
             <div class="metric-value">R$ {cur_arpu:,.2f}</div>
-            <div class="metric-sub">Receita média por usuário ativo</div>
+            <div class="metric-sub">Receita média por usuário ativo ({ref_month})</div>
         </div>
     """, unsafe_allow_html=True)
 
@@ -393,7 +330,7 @@ with kpi3:
         <div class="metric-card">
             <div class="metric-title">Taxa de Churn Atual</div>
             <div class="metric-value" style="color: {'#EF4444' if cur_churn > 8 else '#111111'};">{cur_churn:.2f}%</div>
-            <div class="metric-sub">Cancelados / Total Ativos</div>
+            <div class="metric-sub">Cancelados / base do mês ({ref_month})</div>
         </div>
     """, unsafe_allow_html=True)
 
@@ -411,7 +348,7 @@ st.write("")
 col_left, col_right = st.columns([7, 5])
 
 with col_left:
-    st.markdown(f"#### 📈 Evolução Financeira: Faturamento vs. ARPU")
+    st.markdown("#### 📈 Evolução Financeira: Faturamento vs. ARPU")
     if not df_monthly.empty:
         fig_fin = make_subplots(specs=[[{"secondary_y": True}]])
         
@@ -452,18 +389,18 @@ with col_left:
         fig_fin.update_xaxes(showgrid=False, linecolor=SURF_THEME['card_border'])
         fig_fin.update_yaxes(title_text="Faturamento (R$)", showgrid=True, gridcolor="#F1F5F9", secondary_y=False)
         fig_fin.update_yaxes(title_text="ARPU (R$)", showgrid=False, secondary_y=True)
-        st.plotly_chart(fig_fin, use_container_width=True)
+        st.plotly_chart(fig_fin, width="stretch")
     else:
         st.info("Nenhum dado encontrado para os filtros selecionados.")
 
 with col_right:
-    st.markdown(f"#### 👥 Composição da Base de Clientes")
+    st.markdown("#### 👥 Composição da Base de Clientes")
     if not df_monthly.empty:
         fig_comp = go.Figure()
         
         fig_comp.add_trace(go.Bar(
             x=df_monthly['month_start'],
-            y=df_monthly['active_customers'],
+            y=df_monthly['healthy_customers'],
             name="Ativos Saudáveis",
             marker_color=SURF_THEME['cobalt_blue']
         ))
@@ -492,34 +429,20 @@ with col_right:
         )
         fig_comp.update_xaxes(showgrid=False, linecolor=SURF_THEME['card_border'])
         fig_comp.update_yaxes(showgrid=True, gridcolor="#F1F5F9")
-        st.plotly_chart(fig_comp, use_container_width=True)
+        st.plotly_chart(fig_comp, width="stretch")
     else:
         st.info("Nenhum dado disponível.")
 
 st.markdown("#### 🧊 Matriz Térmica de Cohort (Retenção por Safra)")
 st.markdown(
-    "<span style='color: #64748B; font-size: 0.82rem;'>Percentual de clientes mantidos ativos em relação ao Tenure 0 (Entrada na base).</span>",
+    "<span style='color: #64748B; font-size: 0.82rem;'>Percentual de clientes ativos em relação ao total adquirido na safra (M0 = mês de entrada).</span>",
     unsafe_allow_html=True
 )
 
-if not df_cohort_raw.empty:
-    # Pivot raw counts
-    pivot_counts = df_cohort_raw.pivot(index='cohort_month', columns='tenure_month', values='active_in_tenure')
-    
-    # Calculate initial cohort size (Tenure 0 or first available column)
-    if 0 in pivot_counts.columns:
-        cohort_sizes = pivot_counts[0]
-    else:
-        cohort_sizes = pivot_counts.bfill(axis=1).iloc[:, 0]
-        
-    # Retention matrix calculation
-    cohort_retention = pivot_counts.divide(cohort_sizes, axis=0) * 100.0
-    
-    # Restrict tenure columns to reasonable display window (up to 12 or 15)
-    max_cols = min(13, len(cohort_retention.columns))
-    cohort_display = cohort_retention.iloc[:, :max_cols].round(1)
-    
-    # Format labels
+if not cohort_matrix.empty:
+    # Retenção sobre o tamanho total da safra (KPI-08) — não re-baseia safras anteriores à janela
+    cohort_display = cohort_matrix.round(1)
+
     z_values = cohort_display.values
     x_labels = [f"M{c}" for c in cohort_display.columns]
     y_labels = cohort_display.index.tolist()
@@ -536,7 +459,7 @@ if not df_cohort_raw.empty:
             [0.5, SURF_THEME['cohort_mid']],
             [1.0, SURF_THEME['cohort_max']]
         ],
-        zmin=20,
+        zmin=0,
         zmax=100,
         showscale=True,
         colorbar=dict(title="Retenção %", len=0.85)
@@ -551,7 +474,7 @@ if not df_cohort_raw.empty:
     )
     fig_cohort.update_xaxes(side="top", tickfont=dict(size=11, family="Roboto"))
     fig_cohort.update_yaxes(autorange="reversed", tickfont=dict(size=11, family="Roboto"))
-    st.plotly_chart(fig_cohort, use_container_width=True)
+    st.plotly_chart(fig_cohort, width="stretch")
 else:
     st.info("Nenhum dado de safra para os filtros selecionados.")
 
@@ -560,14 +483,17 @@ with st.expander("🔍 Visualizar e Exportar Dados Consolidados (CSV)"):
         df_monthly.rename(columns={
             "month_start": "Mês de Referência",
             "active_customers": "Clientes Ativos",
+            "healthy_customers": "Ativos Saudáveis",
             "grace_customers": "Grace Period",
+            "base_customers": "Base do Mês",
+            "revenue_lost": "Receita Perdida - Churn (R$)",
             "churn_customers": "Cancelamentos",
             "total_revenue": "Receita Reconhecida (R$)",
             "arpu": "ARPU (R$)",
             "churn_rate": "Churn Rate (%)",
             "revenue_at_risk": "Receita sob Risco (R$)"
         }),
-        use_container_width=True
+        width="stretch"
     )
     
     csv_data = df_monthly.to_csv(index=False).encode('utf-8')
