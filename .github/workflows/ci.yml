@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Instalar dependências
+        run: |
+          pip install streamlit==1.63.0 plotly==7.0.0 pandas==3.0.5 numpy==2.5.2 Faker tqdm
+          pip install -r requirements-dev.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Lint (ruff)
+        run: ruff check . --select E,F --ignore E501
+
+      - name: Testes de spec, dados, SQL e app
+        run: python -m pytest --ignore=tests/e2e -v
+
+      - name: Testes E2E (Playwright)
+        run: python -m pytest tests/e2e -v
+
+      - name: Capturas de tela do E2E
+        if: always()
+        run: mkdir -p screenshots && E2E_SCREENSHOTS=screenshots python -m pytest tests/e2e -k ui01 -q || true
+
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: screenshots
+          path: screenshots/

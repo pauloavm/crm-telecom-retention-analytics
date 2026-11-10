@@ -1,0 +1,4 @@
+# Dependências de teste/qualidade (o app usa requirements.txt)
+pytest==9.2.0
+pytest-playwright==0.10.0
+ruff==0.17.4

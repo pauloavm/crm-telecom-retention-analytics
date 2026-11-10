@@ -33,3 +33,7 @@ dashboards/Analise_crm_telecom.pbix
 
 *.pbix
 dashboards/*.pbix
+
+# Python
+__pycache__/
+.pytest_cache/

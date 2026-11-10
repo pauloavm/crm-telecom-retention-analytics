@@ -19,7 +19,17 @@ SELECT
             WHEN status = 'CHURN' THEN customer_id
         END
     ) AS churn_customers,
-    ROUND(SUM(revenue_at_risk), 2) AS revenue_at_risk,
+    -- KPI-06 (specs/kpis.spec.md): só GRACE_PERIOD é receita "sob risco" -
+    -- receita de clientes em CHURN já foi perdida e não deve inflar este número.
+    ROUND(
+        SUM(
+            CASE
+                WHEN status = 'GRACE_PERIOD' THEN revenue_at_risk
+                ELSE 0
+            END
+        ),
+        2
+    ) AS revenue_at_risk,
     ROUND(
         100.0 * COUNT(
             DISTINCT CASE
