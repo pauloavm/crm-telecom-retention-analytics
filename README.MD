@@ -19,6 +19,8 @@ O grande diferencial deste pipeline é sua **arquitetura híbrida de alto desemp
 
 Os dois painéis seguem a mesma especificação de KPIs ([`specs/kpis.spec.md`](specs/kpis.spec.md)) e os testes automatizados garantem que **mostram exatamente os mesmos números**.
 
+![Dashboard Streamlit](docs/img/dashboard_streamlit.png)
+
 ![Dashboard em Excel](docs/img/dashboard_excel.png)
 
 ---
