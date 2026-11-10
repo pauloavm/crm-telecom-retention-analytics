@@ -8,9 +8,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
           cache: pip
@@ -22,7 +22,7 @@ jobs:
           python -m playwright install --with-deps chromium
 
       - name: Lint (ruff)
-        run: ruff check app.py analytics.py generate_database.py tests --select E,F --ignore E501
+        run: ruff check . --select E,F --ignore E501
 
       - name: Testes de spec, dados, SQL e app
         run: python -m pytest --ignore=tests/e2e -v
@@ -34,7 +34,7 @@ jobs:
         if: always()
         run: mkdir -p screenshots && E2E_SCREENSHOTS=screenshots python -m pytest tests/e2e -k ui01 -q || true
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: always()
         with:
           name: screenshots

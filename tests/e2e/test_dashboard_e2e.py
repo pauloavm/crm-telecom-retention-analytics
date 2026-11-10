@@ -90,18 +90,17 @@ def test_ui01_ui02_ui03_page_renders(browser, server):
 
 def test_ui04_filter_updates_kpis(browser, server):
     page, _ = open_app(browser, server, viewport={"width": 1440, "height": 1000})
-    before = kpi_value(page, "Clientes Ativos")
-    page.locator("[data-testid='stMultiSelect']").first.click()
-    # Streamlit >= 1.5x exibe "Select all" como 1ª opção; escolhemos um plano específico
-    page.get_by_role("option").filter(has_not_text="Select all").first.click()
+    value = page.locator(".metric-card", has_text="Clientes Ativos").locator(".metric-value")
+    before = value.inner_text()
+    plan_filter = page.locator("[data-testid='stMultiSelect']").first
+    # Escolhe o plano pelo nome (o Streamlit recente inclui "Select all" na lista)
+    plan_filter.click()
+    page.get_by_role("option", name="Controle 10GB", exact=True).click()
     page.keyboard.press("Escape")
-    page.wait_for_function(
-        "b => { const el=[...document.querySelectorAll('.metric-card')].find(c=>c.textContent.includes('Clientes Ativos'));"
-        " return el && el.querySelector('.metric-value').textContent.trim() !== b; }",
-        arg=before, timeout=30_000,
-    )
+    pw.expect(plan_filter).to_contain_text("Controle 10GB", timeout=30_000)
+    # expect() repete a verificação até o rerun do Streamlit terminar
+    pw.expect(value).not_to_have_text(before, timeout=60_000)
     assert no_streamlit_exception(page)
-    assert kpi_value(page, "Clientes Ativos") != before
 
 
 def test_ui05_csv_export(browser, server):

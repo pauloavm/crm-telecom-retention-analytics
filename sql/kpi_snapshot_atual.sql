@@ -1,18 +1,20 @@
 DROP TABLE IF EXISTS kpi_snapshot_atual;
 
+-- KPI-01/03/04 (specs/kpis.spec.md): clientes em GRACE_PERIOD continuam ativos
+-- e com receita reconhecida, por isso entram em ativos, receita e ARPU.
 CREATE TABLE
     kpi_snapshot_atual AS
 SELECT
     month_start,
     COUNT(
         DISTINCT CASE
-            WHEN status = 'ACTIVE' THEN customer_id
+            WHEN active_flag = 1 THEN customer_id
         END
     ) AS active_customers,
     ROUND(
         SUM(
             CASE
-                WHEN status = 'ACTIVE' THEN recognized_revenue
+                WHEN active_flag = 1 THEN recognized_revenue
                 ELSE 0
             END
         ),
@@ -21,13 +23,13 @@ SELECT
     ROUND(
         SUM(
             CASE
-                WHEN status = 'ACTIVE' THEN recognized_revenue
+                WHEN active_flag = 1 THEN recognized_revenue
                 ELSE 0
             END
         ) / NULLIF(
             COUNT(
                 DISTINCT CASE
-                    WHEN status = 'ACTIVE' THEN customer_id
+                    WHEN active_flag = 1 THEN customer_id
                 END
             ),
             0

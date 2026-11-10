@@ -3,7 +3,7 @@
 
 [![CI](https://github.com/pauloavm/crm-telecom-retention-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/pauloavm/crm-telecom-retention-analytics/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.13-blue)
-![Testes](https://img.shields.io/badge/testes-41%20(unit%20%2B%20SQL%20%2B%20E2E)-brightgreen)
+![Testes](https://img.shields.io/badge/testes-44%20(unit%20%2B%20SQL%20%2B%20E2E)-brightgreen)
 
 > ⚠️ **Dados 100% sintéticos** (gerados com `Faker` em `generate_database.py`). Empresa, clientes e valores são fictícios — o objetivo é demonstrar modelagem, engenharia e análise de retenção.
 
@@ -34,16 +34,16 @@ Ao invés de delegar cálculos pesados e complexos em tempo de execução via me
 │   └── kpis.spec.md         # Especificação (SDD) das regras de negócio e KPIs — fonte da verdade
 ├── generate_database.py     # Gera a base sintética (Faker) em SQLite com a regra de Grace Period
 ├── ingestao_dados.py        # Migra o SQLite para MySQL (schema relacional + carga)
-├── generate_table_view.py   # Executa os modelos de /sql no MySQL e materializa as tabelas resumo
+├── generate_table_view.py   # Executa os modelos de /sql e materializa as tabelas resumo (MySQL ou --sqlite)
 ├── analytics.py             # Camada de métricas do dashboard (pura e testável)
 ├── app.py                   # Dashboard web em Streamlit + Plotly
-├── /data/                   # SQLite de demonstração (1.000 clientes, 24 meses)
+├── /data/                   # SQLite de demonstração (1.000 clientes, 24 meses) já com as tabelas resumo
 ├── /sql/                    # Modelos SQL de agregação
 │   ├── calc_arpu.sql            # ARPU mensal
 │   ├── cohort_analysis.sql      # Matriz de retenção por safra
 │   ├── kpis_mensais.sql         # Série mensal: ativos, grace, churn, receita sob risco
 │   └── kpi_snapshot_atual.sql   # Snapshot do último mês para cartões KPI
-├── /tests/                  # 41 testes: spec de KPIs, qualidade de dados, SQL, gerador, app e E2E
+├── /tests/                  # 44 testes: spec de KPIs, qualidade de dados, SQL, gerador, app e E2E
 │   └── /e2e/                    # Playwright: sobe o Streamlit e testa a interface real
 ├── /.github/workflows/ci.yml # CI: lint + testes + E2E a cada push
 └── /dashboards/             # Projeto Power BI em formato PBIP (versionável em Git)
@@ -154,6 +154,11 @@ A fim de garantir a performance máxima das consultas nos dashboards, quatro tab
     ```
     O primeiro migra o SQLite para MySQL; o segundo executa os modelos de `/sql` (Cohort, ARPU, KPIs mensais e snapshot) consumidos pelo Power BI. O dashboard Streamlit não precisa desta etapa: ele calcula as métricas direto do SQLite.
 
+    **Sem MySQL?** Os mesmos modelos rodam no SQLite. O banco versionado em `/data` já vem com as tabelas `arpu_mensal`, `cohort_retention`, `kpis_mensais` e `kpi_snapshot_atual`; para recriá-las:
+    ```bash
+    python generate_table_view.py --sqlite
+    ```
+
 4.  **Executando o Dashboard Web Localmente**:
     Com os dados processados, inicie a interface interativa do Streamlit para visualizá-la no navegador:
     ```bash
@@ -197,17 +202,18 @@ As fórmulas de cada KPI estão especificadas em [`specs/kpis.spec.md`](specs/kp
 |---|---|---|
 | Spec de KPIs | `tests/test_analytics_spec.py` | Fórmulas de ARPU, churn, receita sob risco e retenção sobre uma base mínima com resultado calculável à mão |
 | Qualidade de dados | `tests/test_data_quality.py` | Chaves, integridade referencial, churn terminal, histórico contíguo, status × dias de atraso |
-| Modelos SQL | `tests/test_sql_models.py` | Executa `/sql` e valida limites, idempotência e consistência entre tabelas |
+| Modelos SQL | `tests/test_sql_models.py` | Executa `/sql` no SQLite, valida limites e idempotência e confere que as tabelas do Power BI batem com as métricas do app |
 | Gerador | `tests/test_generator.py` | Regras de negócio da simulação e pico de churn no 3º mês |
 | App | `tests/test_app.py` | Streamlit renderiza e reage a filtros sem exceção (AppTest) |
 | E2E | `tests/e2e/` | Navegador real: cartões, gráficos, filtros, exportação CSV e layout mobile |
 
-Ao escrever a spec, os testes revelaram e motivaram a correção de 5 inconsistências no cálculo original:
+Ao escrever a spec, os testes revelaram e motivaram a correção de 6 inconsistências no cálculo original:
 1. **Receita sob risco** somava clientes já cancelados (receita perdida, não "em risco") — inflava o KPI entre 46% (último mês) e 67% (média mensal).
 2. O cartão de risco **zerava** ao escolher uma janela que não terminasse no último mês do banco.
 3. O gráfico de composição **contava clientes em Grace Period duas vezes**.
 4. A matriz de cohort **apagava safras anteriores à janela** selecionada e usava o M0 ativo como base (em vez do tamanho da safra).
 5. O churn rate era dividido pelos ativos remanescentes, e não pela base do início do mês.
+6. O snapshot dos cartões do Power BI (`kpi_snapshot_atual`) excluía os clientes em Grace Period dos ativos, da receita e do ARPU.
 
 ---
 
