@@ -93,11 +93,21 @@ def test_ui04_filter_updates_kpis(browser, server):
     value = page.locator(".metric-card", has_text="Clientes Ativos").locator(".metric-value")
     before = value.inner_text()
     plan_filter = page.locator("[data-testid='stMultiSelect']").first
-    # Escolhe o plano pelo nome (o Streamlit recente inclui "Select all" na lista)
-    plan_filter.click()
-    page.get_by_role("option", name="Controle 10GB", exact=True).click()
-    page.keyboard.press("Escape")
-    pw.expect(plan_filter).to_contain_text("Controle 10GB", timeout=30_000)
+    combo = plan_filter.get_by_role("combobox")
+    # O Streamlit pode re-renderizar o widget logo após o carregamento e descartar
+    # a seleção; digitamos o plano + Enter e repetimos até o chip aparecer.
+    for _ in range(4):
+        combo.click()
+        combo.fill("Controle 10GB")
+        page.get_by_role("option", name="Controle 10GB", exact=True).wait_for(timeout=10_000)
+        page.keyboard.press("Enter")
+        page.keyboard.press("Escape")
+        try:
+            pw.expect(plan_filter).to_contain_text("Controle 10GB", timeout=8_000)
+            break
+        except AssertionError:
+            continue
+    pw.expect(plan_filter).to_contain_text("Controle 10GB", timeout=1_000)
     # expect() repete a verificação até o rerun do Streamlit terminar
     pw.expect(value).not_to_have_text(before, timeout=60_000)
     assert no_streamlit_exception(page)
