@@ -64,6 +64,16 @@ def test_kpi08_window_does_not_rebase_older_cohorts(tiny_db):
     assert m.loc["2025-01-01"][1] == pytest.approx(200 / 3)
 
 
+def test_kpi08_fully_churned_cohort_shows_zero_not_blank(tiny_db):
+    """Safra que zerou mostra 0% nos meses seguintes (dentro da janela e dos dados)."""
+    m = cohort_retention(tiny_db, Filters(plans=["P1"], states=["RJ"]))  # só o cliente B
+    jan = m.loc["2025-01-01"]
+    assert jan[0] == pytest.approx(100.0)
+    assert jan[1] == pytest.approx(0.0)
+    assert jan[2] == pytest.approx(0.0)  # B cancelou em fev: mar = 0%, não vazio
+    assert 3 not in m.columns  # abril não existe nos dados
+
+
 def test_kpi08_retention_bounded_and_non_increasing(shipped_db):
     m = cohort_retention(shipped_db, Filters())
     values = m.to_numpy()
