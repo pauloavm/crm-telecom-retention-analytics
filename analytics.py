@@ -128,7 +128,21 @@ def cohort_retention(conn: sqlite3.Connection, filters: Filters, max_tenure: int
     if raw.empty:
         return pd.DataFrame()
     raw["retention"] = raw["active"] / raw["cohort_size"] * 100
-    return raw.pivot(index="cohort_month", columns="tenure_month", values="retention").sort_index()
+    matrix = raw.pivot(index="cohort_month", columns="tenure_month", values="retention").sort_index()
+
+    # Safra que zerou (todos cancelaram) não gera mais registros mensais: dentro da
+    # janela e do período com dados, a retenção é 0%, não "vazio".
+    first_data, last_data = conn.execute("SELECT MIN(month_start), MAX(month_start) FROM customer_monthly").fetchone()
+    lo = pd.Timestamp(max(filters.month_start or first_data, first_data))
+    hi = pd.Timestamp(min(filters.month_end or last_data, last_data))
+    matrix = matrix.reindex(columns=range(max_tenure + 1))
+    for cohort in matrix.index:
+        start = pd.Timestamp(cohort)
+        for t in matrix.columns:
+            month = start + pd.DateOffset(months=int(t))
+            if lo <= month <= hi and pd.isna(matrix.at[cohort, t]):
+                matrix.at[cohort, t] = 0.0
+    return matrix.dropna(axis=1, how="all")
 
 
 def headline(df_monthly: pd.DataFrame) -> dict:

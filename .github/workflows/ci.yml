@@ -17,7 +17,7 @@ jobs:
 
       - name: Instalar dependências
         run: |
-          pip install streamlit==1.63.0 plotly==7.0.0 pandas==3.0.5 numpy==2.5.2 Faker tqdm
+          pip install streamlit==1.63.0 plotly==7.0.0 pandas==3.0.5 numpy==2.5.2 Faker tqdm openpyxl==3.1.5
           pip install -r requirements-dev.txt
           python -m playwright install --with-deps chromium
 

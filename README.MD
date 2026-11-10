@@ -3,7 +3,7 @@
 
 [![CI](https://github.com/pauloavm/crm-telecom-retention-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/pauloavm/crm-telecom-retention-analytics/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.13-blue)
-![Testes](https://img.shields.io/badge/testes-44%20(unit%20%2B%20SQL%20%2B%20E2E)-brightgreen)
+![Testes](https://img.shields.io/badge/testes-50%20(unit%20%2B%20SQL%20%2B%20Excel%20%2B%20E2E)-brightgreen)
 
 > ⚠️ **Dados 100% sintéticos** (gerados com `Faker` em `generate_database.py`). Empresa, clientes e valores são fictícios — o objetivo é demonstrar modelagem, engenharia e análise de retenção.
 
@@ -15,9 +15,11 @@ Este repositório contém um ecossistema de análise de dados de ponta a ponta p
 
 O grande diferencial deste pipeline é sua **arquitetura híbrida de alto desempenho**, oferecendo duas opções robustas de visualização:
 1.  **Dashboard Web Interativo (Streamlit)**: Disponível diretamente no navegador, permitindo simulações e diagnósticos rápidos de forma totalmente responsiva.
-2.  **Dashboard Corporativo (Power BI)**: Focado em layout executivo tradicional, rodando sobre tabelas pré-calculadas para obter tempo de resposta imediato (sub-segundo).
+2.  **Dashboard Executivo em Excel (`dashboards/dashboard_crm_telecom.xlsx`)**: o mesmo painel do Streamlit — cartões, gráficos, matriz de cohort e filtros — construído só com fórmulas nativas (sem macros). Abre em qualquer Excel, sem instalar nada.
 
-Ao invés de delegar cálculos pesados e complexos em tempo de execução via medidas virtuais custosas (como DAX pesado ou loops ineficientes em Python), todo o processamento massivo é consolidado previamente no banco de dados e nos scripts de tratamento (SQL e Python). Isso garante atualizações e navegações instantâneas em ambas as interfaces de visualização.
+Os dois painéis seguem a mesma especificação de KPIs ([`specs/kpis.spec.md`](specs/kpis.spec.md)) e os testes automatizados garantem que **mostram exatamente os mesmos números**.
+
+![Dashboard em Excel](docs/img/dashboard_excel.png)
 
 ---
 
@@ -43,11 +45,13 @@ Ao invés de delegar cálculos pesados e complexos em tempo de execução via me
 │   ├── cohort_analysis.sql      # Matriz de retenção por safra
 │   ├── kpis_mensais.sql         # Série mensal: ativos, grace, churn, receita sob risco
 │   └── kpi_snapshot_atual.sql   # Snapshot do último mês para cartões KPI
-├── /tests/                  # 44 testes: spec de KPIs, qualidade de dados, SQL, gerador, app e E2E
+├── /tests/                  # 50 testes: spec de KPIs, dados, SQL, gerador, Excel, app e E2E
 │   └── /e2e/                    # Playwright: sobe o Streamlit e testa a interface real
 ├── /.github/workflows/ci.yml # CI: lint + testes + E2E a cada push
-└── /dashboards/             # Projeto Power BI em formato PBIP (versionável em Git)
-    └── Analise_crm_telecom.pbip
+├── build_excel_dashboard.py # Gera o dashboard em Excel a partir do SQLite
+├── /docs/img/               # Capturas para o README
+└── /dashboards/
+    └── dashboard_crm_telecom.xlsx # Dashboard executivo em Excel (fórmulas vivas, filtros por lista)
 ```
 
 ---
@@ -63,13 +67,13 @@ Uma grande operadora de telecomunicações estava enfrentando uma **taxa de chur
 Minha missão foi desenvolver um **pipeline analítico de ponta a ponta** capaz de coletar, processar, modelar e expor de maneira executiva e web os dados históricos de clientes. Os principais objetivos foram:
 1. Estruturar um pipeline robusto de ingestão, tratamento e modelagem usando Python e SQL.
 2. Formular e isolar uma regra de negócio complexa de cobrança e risco financeiro (o **Grace Period**).
-3. Construir painéis de visualização modernos e velozes: um corporativo no **Power BI** com carregamento instantâneo e outro interativo no **Streamlit (Python)** implantado na nuvem para acesso público e fácil compartilhamento.
+3. Construir painéis de visualização acessíveis: um interativo no **Streamlit (Python)** implantado na nuvem e um executivo em **Excel**, que qualquer gestor abre sem instalar nada.
 
 ### 3. Ação (Action)
 Para concretizar as metas propostas, conduzi as seguintes ações integradas:
 
 *   **Ingestão & Engenharia de Dados**: Com `generate_database.py` simulei a base de clientes (Faker, semente fixa → reprodutível) em SQLite; com `ingestao_dados.py` migrei o modelo relacional para MySQL e com `generate_table_view.py` materializei as tabelas resumo a partir dos modelos em `/sql`.
-*   **Transformações e Pré-Agregações em SQL**: Em vez de aplicar lógicas de tabelas temporárias e filtros pesados via DAX no Power BI ou loops complexos no Streamlit, desenvolvi rotinas em SQL para pré-calcular métricas-chave em tabelas físicas agregadas:
+*   **Transformações e Pré-Agregações em SQL**: Em vez de aplicar lógicas de tabelas temporárias e filtros pesados na camada de visualização ou loops complexos no Streamlit, desenvolvi rotinas em SQL para pré-calcular métricas-chave em tabelas físicas agregadas:
     *   **Matriz de Cohort (Safras)**: Criação da tabela `cohort_retention`, que agrupa os clientes por mês de aquisição (`cohort_month`) e calcula a taxa de retenção (`retention_rate`) no decorrer dos meses de vida do cliente (`tenure_month`).
     *   **ARPU e Receita Mensal**: Criação da tabela `arpu_mensal` consolidando o volume de clientes ativos, faturamento total reconhecido e ARPU mês a mês.
     *   **Snapshot Executivo**: Tabela `kpi_snapshot_atual` calculando de forma estática os últimos indicadores chave do negócio (`active_customers`, `total_revenue`, `arpu_atual`, `churn_rate_atual`) para alimentar os cartões instantaneamente.
@@ -78,17 +82,17 @@ Para concretizar as metas propostas, conduzi as seguintes ações integradas:
     *   O faturamento desses clientes é isolado na métrica **Receita sob Risco** (`revenue_at_risk`), orientando diretamente o CRM a disparar réguas de cobrança amigáveis preventivas.
     *   Atrasos acima de 15 dias são classificados como Churn definitivo.
 *   **Visualizações Otimizadas e Deployment**:
-    *   **Power BI**: Conectei as tabelas pré-calculadas e a dimensão `customers` em relacionamentos leves de 1-para-Muitos, arrastando colunas e usando agregações simples e nativas de alta performance.
+    *   **Excel**: Com `build_excel_dashboard.py` (openpyxl) gerei uma pasta de trabalho com a base fato, a série mensal e o painel executivo. Os KPIs usam `COUNTIFS`/`SUMIFS` com nomes definidos, então trocar plano, contrato, UF ou janela de datas recalcula cartões, gráficos e matriz de cohort na hora.
     *   **Streamlit (Python)**: Desenvolvi o arquivo `app.py` integrando com o banco SQLite. Com o auxílio do **Plotly**, criei gráficos totalmente dinâmicos, incluindo um heatmap interativo para a matriz de Cohort e visualizações que reagem instantaneamente aos filtros de planos e estados selecionados pelos usuários.
     *   **Publicação na Nuvem**: Hospedei o painel interativo utilizando o **Streamlit Community Cloud**, facilitando a demonstração prática do projeto em tempo real a qualquer parte interessada.
 
 ### 4. Resultado (Result)
 Os resultados entregues pelo projeto trouxeram revelações críticas de negócios e soluções mensuráveis:
-*   **Identificação de Gargalos Críticos (Cohort)**: O painel de safras (disponível no Power BI e no Streamlit) evidenciou que **~27% de todo o churn ocorre no 3º mês de tenure (assinatura)** — mais que o dobro de qualquer outro mês. Isso indicou uma falha grave de *onboarding* de clientes ou na entrega inicial do serviço.
+*   **Identificação de Gargalos Críticos (Cohort)**: O painel de safras (disponível no Streamlit e no Excel) evidenciou que **~27% de todo o churn ocorre no 3º mês de tenure (assinatura)** — mais que o dobro de qualquer outro mês. Isso indicou uma falha grave de *onboarding* de clientes ou na entrega inicial do serviço.
 *   **Quantificação de Riscos Financeiros**: A regra de Grace Period isolou a receita de clientes inadimplentes recuperáveis: **~15% da base fica em Grace Period a cada mês**, o equivalente a **~R$ 4 mil/mês na amostra de 1.000 clientes** (≈ R$ 4 milhões/mês na simulação de 1 milhão de clientes).
 *   **Direcionamento de CRM**: O diagnóstico de Cohort e Grace Period permitiu que o time de CRM criasse campanhas de retenção direcionadas (ações de *cross-selling* preventivo no final do 2º mês de assinatura) e réguas de cobrança automatizadas para o grupo de inadimplência inicial.
 *   **Projeções de Negócio**: Estima-se que as ações focadas reduzam a **taxa de churn geral em até 15%** e recuperem **20% de toda a receita em risco** (`revenue_at_risk`), impactando diretamente o ROI e o fluxo de caixa.
-*   **Performance dos Painéis**: Ao desonerar o mecanismo de análise do Power BI e as consultas do Streamlit de cálculos de Cohort dinâmicos, ambos os painéis obtiveram um **tempo de resposta sub-segundo** sob qualquer filtro ou interação.
+*   **Consistência entre Painéis**: Streamlit, Excel e tabelas SQL são conferidos entre si por testes automatizados — o mesmo filtro produz os mesmos números em qualquer interface.
 
 ---
 
@@ -152,7 +156,7 @@ A fim de garantir a performance máxima das consultas nos dashboards, quatro tab
     ```bash
     python generate_table_view.py
     ```
-    O primeiro migra o SQLite para MySQL; o segundo executa os modelos de `/sql` (Cohort, ARPU, KPIs mensais e snapshot) consumidos pelo Power BI. O dashboard Streamlit não precisa desta etapa: ele calcula as métricas direto do SQLite.
+    O primeiro migra o SQLite para MySQL; o segundo executa os modelos de `/sql` (Cohort, ARPU, KPIs mensais e snapshot) usados por ferramentas de BI. O dashboard Streamlit não precisa desta etapa: ele calcula as métricas direto do SQLite.
 
     **Sem MySQL?** Os mesmos modelos rodam no SQLite. O banco versionado em `/data` já vem com as tabelas `arpu_mensal`, `cohort_retention`, `kpis_mensais` e `kpi_snapshot_atual`; para recriá-las:
     ```bash
@@ -165,8 +169,11 @@ A fim de garantir a performance máxima das consultas nos dashboards, quatro tab
     streamlit run app.py
     ```
 
-5.  **Acessando pelo Power BI**:
-    Abra `dashboards/Analise_crm_telecom.pbip` no Power BI Desktop (formato PBIP, versionável em Git), aponte a conexão para o MySQL gerado no passo 3 e explore o painel executivo.
+5.  **Dashboard em Excel**:
+    Abra `dashboards/dashboard_crm_telecom.xlsx` e altere as células amarelas da aba **Dashboard**. Para regenerar o arquivo a partir do SQLite:
+    ```bash
+    python build_excel_dashboard.py
+    ```
 
 6.  **Rodando os testes**:
     ```bash
@@ -187,10 +194,12 @@ A fim de garantir a performance máxima das consultas nos dashboards, quatro tab
 *   **Segmentação Rápida**: Filtros laterais amigáveis de Estado, Plano e Tipo de Contrato atualizando os dados e gráficos instantaneamente na tela.
 *   **Praticidade de Acesso**: Nenhum download necessário; basta acessar o link público para interagir com os dados em tempo real.
 
-### 📊 No Power BI Desktop
-*   **Cabeçalho Estratégico**: Cartões KPI estáticos consumidos diretamente da tabela `kpi_snapshot_atual`.
-*   **Análise de Safras**: Matriz estruturada com `cohort_month` em linhas, `tenure_month` em colunas e `retention_rate` em valores, aplicando uma escala de cores térmicas para destacar o abandono no terceiro mês.
-*   **Evolução de Faturamento**: Gráfico de linhas duplo combinando `total_revenue` e `arpu` ao longo da linha temporal de `month_start`.
+### 📊 No Excel (`dashboards/dashboard_crm_telecom.xlsx`)
+*   **Filtros por lista suspensa**: Plano, Contrato, UF e janela de datas (início/fim) — as mesmas opções do Streamlit.
+*   **Cartões KPI**: Clientes ativos (com variação vs. mês anterior), ARPU, churn e receita sob risco do último mês da janela.
+*   **Gráficos**: Faturamento × ARPU (eixo duplo) e composição da base (saudáveis, Grace Period, cancelados).
+*   **Matriz de Cohort**: retenção por safra com escala de cores térmica, destacando o abandono no 3º mês.
+*   **Abas de apoio**: `Mensal` (série consolidada, equivalente ao CSV do Streamlit), `Dados`, `Clientes` e `Sobre` (definições dos KPIs).
 
 ---
 
@@ -202,18 +211,20 @@ As fórmulas de cada KPI estão especificadas em [`specs/kpis.spec.md`](specs/kp
 |---|---|---|
 | Spec de KPIs | `tests/test_analytics_spec.py` | Fórmulas de ARPU, churn, receita sob risco e retenção sobre uma base mínima com resultado calculável à mão |
 | Qualidade de dados | `tests/test_data_quality.py` | Chaves, integridade referencial, churn terminal, histórico contíguo, status × dias de atraso |
-| Modelos SQL | `tests/test_sql_models.py` | Executa `/sql` no SQLite, valida limites e idempotência e confere que as tabelas do Power BI batem com as métricas do app |
+| Modelos SQL | `tests/test_sql_models.py` | Executa `/sql` no SQLite, valida limites e idempotência e confere que as tabelas resumo batem com as métricas do app |
+| Dashboard Excel | `tests/test_excel_dashboard.py` | Fórmulas vivas, sem erros, e cartões, série mensal e cohort iguais aos do app |
 | Gerador | `tests/test_generator.py` | Regras de negócio da simulação e pico de churn no 3º mês |
 | App | `tests/test_app.py` | Streamlit renderiza e reage a filtros sem exceção (AppTest) |
 | E2E | `tests/e2e/` | Navegador real: cartões, gráficos, filtros, exportação CSV e layout mobile |
 
-Ao escrever a spec, os testes revelaram e motivaram a correção de 6 inconsistências no cálculo original:
+Ao escrever a spec, os testes revelaram e motivaram a correção de 7 inconsistências no cálculo original:
 1. **Receita sob risco** somava clientes já cancelados (receita perdida, não "em risco") — inflava o KPI entre 46% (último mês) e 67% (média mensal).
 2. O cartão de risco **zerava** ao escolher uma janela que não terminasse no último mês do banco.
 3. O gráfico de composição **contava clientes em Grace Period duas vezes**.
 4. A matriz de cohort **apagava safras anteriores à janela** selecionada e usava o M0 ativo como base (em vez do tamanho da safra).
 5. O churn rate era dividido pelos ativos remanescentes, e não pela base do início do mês.
-6. O snapshot dos cartões do Power BI (`kpi_snapshot_atual`) excluía os clientes em Grace Period dos ativos, da receita e do ARPU.
+6. O snapshot dos cartões (`kpi_snapshot_atual`) excluía os clientes em Grace Period dos ativos, da receita e do ARPU.
+7. Na matriz de cohort, safras que zeraram (todos cancelaram) apareciam em branco em vez de 0%.
 
 ---
 
